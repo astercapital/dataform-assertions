@@ -36,7 +36,7 @@ const createRowConditionAssertion = (globalParams, schemaName, tableName, filter
                         WHERE
                             ${filter}
                     )
-                    SELECT "Condition not met: ${conditionQuery}, Table: ${ctx.ref(tableName)}" AS assertion_description
+                    SELECT "Condition not met: ${conditionQuery}, Table: ${ctx.ref(schemaName, tableName)}" AS assertion_description
                         FROM filtering
                         WHERE NOT (${conditionQuery})
                     `);
