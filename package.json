@@ -1,9 +1,9 @@
 {
-    "name": "@devoteamgcloud/dataform-assertions",
-    "version": "2.0.3",
+    "name": "astercapital/dataform-assertions",
+    "version": "1.0.0",
     "repository": {
         "type": "git",
-        "url": "https://github.com/devoteamgcloud/dataform-assertions.git"
+        "url": "https://github.com/astercapital/dataform-assertions.git"
     },
     "dependencies": {
         "@dataform/core": "^3.0.0"
