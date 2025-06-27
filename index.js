@@ -29,7 +29,7 @@ const referential_integrity_assertions = require("./includes/referential_integri
 module.exports = ({
     globalAssertionsParams = {
         database: dataform.projectConfig.defaultDatabase,
-        schema: dataform.projectConfig.assertionSchema,
+        schema: dataform.projectConfig.defaultAssertionDataset,
         location: dataform.projectConfig.defaultLocation,
         tags: [],
         disabledInEnvs: []
