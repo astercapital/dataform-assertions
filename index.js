@@ -27,13 +27,7 @@ const data_completeness_assertions = require("./includes/data_completeness_asser
 const referential_integrity_assertions = require("./includes/referential_integrity_assertions");
 
 module.exports = ({
-    globalAssertionsParams = {
-        database: dataform.projectConfig.defaultDatabase,
-        schema: dataform.projectConfig.assertionSchema,
-        location: dataform.projectConfig.defaultLocation,
-        tags: [],
-        disabledInEnvs: []
-    },
+    globalAssertionsParams = {},
     config = {},
     rowConditions = {},
     uniqueKeyConditions = {},
@@ -41,11 +35,20 @@ module.exports = ({
     dataCompletenessConditions = {},
     referentialIntegrityConditions = {}
 }) => {
-    const rowConditionAssertionsResult = row_condition_assertions(globalAssertionsParams, config, rowConditions);
-    const uniqueKeyAssertionsResult = unique_key_assertions(globalAssertionsParams, config, uniqueKeyConditions);
-    const dataFreshnessAssertionsResult = data_freshness_assertions(globalAssertionsParams, config, dataFreshnessConditions);
-    const dataCompletenessAssertionsResult = data_completeness_assertions(globalAssertionsParams, config, dataCompletenessConditions);
-    const referentialIntegrityAssertionsResult = referential_integrity_assertions(globalAssertionsParams, config, referentialIntegrityConditions);
+
+    const defaultGlobalAssertionsParams = {
+        database: dataform.projectConfig.defaultDatabase,
+	schema: dataform.projectConfig.assertionSchema,
+	location: dataform.projectConfig.defaultLocation,
+	tags: [],
+	disabledInEnvs: [],
+    };
+    const mergedGlobalAssertionsParams = {...defaultGlobalAssertionsParams, ...globalAssertionsParams};
+    const rowConditionAssertionsResult = row_condition_assertions(mergedGlobalAssertionsParams, config, rowConditions);
+    const uniqueKeyAssertionsResult = unique_key_assertions(mergedGlobalAssertionsParams, config, uniqueKeyConditions);
+    const dataFreshnessAssertionsResult = data_freshness_assertions(mergedGlobalAssertionsParams, config, dataFreshnessConditions);
+    const dataCompletenessAssertionsResult = data_completeness_assertions(mergedGlobalAssertionsParams, config, dataCompletenessConditions);
+    const referentialIntegrityAssertionsResult = referential_integrity_assertions(mergedGlobalAssertionsParams, config, referentialIntegrityConditions);
 
     return {
         rowConditionAssertions: rowConditionAssertionsResult,
