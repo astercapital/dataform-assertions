@@ -1,7 +1,7 @@
 {
     "warehouse": "bigquery",
-    "defaultSchema": "dataform",
-    "defaultAssertionSchema": "dataform_assertions",
+    "defaultDataset": "dataform",
+    "defaultAssertionDataset": "dataform_assertions",
     "defaultDatabase": "sandbox-hrialan",
     "defaultLocation": "EU",
     "vars":{
