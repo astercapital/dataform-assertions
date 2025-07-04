@@ -19,16 +19,27 @@
 
 const assertions = [];
 
-const createDataCompletenessAssertion = (globalParams, schemaName, tableName, filter, columnConditions) => {
+const createDataCompletenessAssertion = (
+  globalParams,
+  schemaName,
+  tableName,
+  filter,
+  columnConditions,
+) => {
   for (let columnName in columnConditions) {
     const allowedPercentageNull = columnConditions[columnName];
 
-    const assertion = assert(`assert_data_completeness_${schemaName}_${tableName}_${columnName}`)
+    const assertion = assert(
+      `${schemaName}_${tableName}_assertions_data_completeness_${columnName}`,
+    )
       .database(globalParams.database)
       .schema(globalParams.schema)
-      .description(`Check data completeness for ${schemaName}.${tableName}.${columnName}, allowed percentage of null values: ${allowedPercentageNull}`)
+      .description(
+        `Check data completeness for ${schemaName}.${tableName}.${columnName}, allowed percentage of null values: ${allowedPercentageNull}`,
+      )
       .tags("assert-data-completeness")
-      .query(ctx => `
+      .query(
+        (ctx) => `
                 WITH
                     filtering AS (
                         SELECT
@@ -42,15 +53,18 @@ const createDataCompletenessAssertion = (globalParams, schemaName, tableName, fi
                         SUM(CASE WHEN ${columnName} IS NULL THEN 1 ELSE 0 END) AS null_count
                         FROM filtering
                         HAVING SAFE_DIVIDE(null_count, total_rows) > ${allowedPercentageNull / 100} AND null_count > 0 AND total_rows > 0
-                    `);
+                    `,
+      );
 
-    (globalParams.tags && globalParams.tags.forEach((tag) => assertion.tags(tag)));
+    globalParams.tags &&
+      globalParams.tags.forEach((tag) => assertion.tags(tag));
 
-    (globalParams.disabledInEnvs && globalParams.disabledInEnvs.includes(dataform.projectConfig.vars.env)) && assertion.disabled();
+    globalParams.disabledInEnvs &&
+      globalParams.disabledInEnvs.includes(dataform.projectConfig.vars.env) &&
+      assertion.disabled();
 
     assertions.push(assertion);
   }
-
 };
 
 module.exports = (globalParams, config, dataCompletenessConditions) => {
@@ -60,7 +74,13 @@ module.exports = (globalParams, config, dataCompletenessConditions) => {
     for (let tableName in tableNames) {
       const columnConditions = tableNames[tableName];
       const filter = config[schemaName]?.[tableName]?.where ?? true;
-      createDataCompletenessAssertion(globalParams, schemaName, tableName, filter, columnConditions);
+      createDataCompletenessAssertion(
+        globalParams,
+        schemaName,
+        tableName,
+        filter,
+        columnConditions,
+      );
     }
   }
   return assertions;

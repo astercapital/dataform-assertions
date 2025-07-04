@@ -20,13 +20,25 @@
 
 const assertions = [];
 
-const createRowConditionAssertion = (globalParams, schemaName, tableName, filter, conditionName, conditionQuery) => {
-  const assertion = assert(`assert_${conditionName.replace(/-/g , "_")}_${schemaName}_${tableName}`)
+const createRowConditionAssertion = (
+  globalParams,
+  schemaName,
+  tableName,
+  filter,
+  conditionName,
+  conditionQuery,
+) => {
+  const assertion = assert(
+    `${schemaName}_${tableName}_assertions_${conditionName.replace(/-/g, "_")}`,
+  )
     .database(globalParams.database)
     .schema(globalParams.schema)
-    .description(`Assert that rows in ${schemaName}.${tableName} meet ${conditionName}`)
+    .description(
+      `Assert that rows in ${schemaName}.${tableName} meet ${conditionName}`,
+    )
     .tags("assert-row-condition")
-    .query(ctx => `
+    .query(
+      (ctx) => `
                 WITH
                     filtering AS (
                         SELECT
@@ -39,17 +51,19 @@ const createRowConditionAssertion = (globalParams, schemaName, tableName, filter
                     SELECT "Condition not met: ${conditionQuery}, Table: ${ctx.ref(schemaName, tableName)}" AS assertion_description
                         FROM filtering
                         WHERE NOT (${conditionQuery})
-                    `);
+                    `,
+    );
 
-  (globalParams.tags && globalParams.tags.forEach((tag) => assertion.tags(tag)));
+  globalParams.tags && globalParams.tags.forEach((tag) => assertion.tags(tag));
 
-  (globalParams.disabledInEnvs && globalParams.disabledInEnvs.includes(dataform.projectConfig.vars.env)) && assertion.disabled();
+  globalParams.disabledInEnvs &&
+    globalParams.disabledInEnvs.includes(dataform.projectConfig.vars.env) &&
+    assertion.disabled();
 
   assertions.push(assertion);
 };
 
 module.exports = (globalParams, config, rowConditions) => {
-
   // Loop through rowConditions to create assertions.
   for (let schemaName in rowConditions) {
     const tableNames = rowConditions[schemaName];
@@ -63,10 +77,10 @@ module.exports = (globalParams, config, rowConditions) => {
           tableName,
           filter,
           conditionName,
-          conditionQuery
+          conditionQuery,
         );
       }
     }
   }
   return assertions;
-}
+};
