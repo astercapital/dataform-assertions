@@ -27,34 +27,56 @@ const data_completeness_assertions = require("./includes/data_completeness_asser
 const referential_integrity_assertions = require("./includes/referential_integrity_assertions");
 
 module.exports = ({
-    globalAssertionsParams = {},
-    config = {},
-    rowConditions = {},
-    uniqueKeyConditions = {},
-    dataFreshnessConditions = {},
-    dataCompletenessConditions = {},
-    referentialIntegrityConditions = {}
+  globalAssertionsParams = {},
+  config = {},
+  rowConditions = {},
+  uniqueKeyConditions = {},
+  dataFreshnessConditions = {},
+  dataCompletenessConditions = {},
+  referentialIntegrityConditions = {},
 }) => {
+  const defaultGlobalAssertionsParams = {
+    database: dataform.projectConfig.defaultDatabase,
+    schema: dataform.projectConfig.assertionSchema,
+    location: dataform.projectConfig.defaultLocation,
+    tags: [],
+    disabledInEnvs: [],
+  };
+  const mergedGlobalAssertionsParams = {
+    ...defaultGlobalAssertionsParams,
+    ...globalAssertionsParams,
+  };
+  const rowConditionAssertionsResult = row_condition_assertions(
+    mergedGlobalAssertionsParams,
+    config,
+    rowConditions,
+  );
+  const uniqueKeyAssertionsResult = unique_key_assertions(
+    mergedGlobalAssertionsParams,
+    config,
+    uniqueKeyConditions,
+  );
+  const dataFreshnessAssertionsResult = data_freshness_assertions(
+    mergedGlobalAssertionsParams,
+    config,
+    dataFreshnessConditions,
+  );
+  const dataCompletenessAssertionsResult = data_completeness_assertions(
+    mergedGlobalAssertionsParams,
+    config,
+    dataCompletenessConditions,
+  );
+  const referentialIntegrityAssertionsResult = referential_integrity_assertions(
+    mergedGlobalAssertionsParams,
+    config,
+    referentialIntegrityConditions,
+  );
 
-    const defaultGlobalAssertionsParams = {
-        database: dataform.projectConfig.defaultDatabase,
-	schema: dataform.projectConfig.assertionSchema,
-	location: dataform.projectConfig.defaultLocation,
-	tags: [],
-	disabledInEnvs: [],
-    };
-    const mergedGlobalAssertionsParams = {...defaultGlobalAssertionsParams, ...globalAssertionsParams};
-    const rowConditionAssertionsResult = row_condition_assertions(mergedGlobalAssertionsParams, config, rowConditions);
-    const uniqueKeyAssertionsResult = unique_key_assertions(mergedGlobalAssertionsParams, config, uniqueKeyConditions);
-    const dataFreshnessAssertionsResult = data_freshness_assertions(mergedGlobalAssertionsParams, config, dataFreshnessConditions);
-    const dataCompletenessAssertionsResult = data_completeness_assertions(mergedGlobalAssertionsParams, config, dataCompletenessConditions);
-    const referentialIntegrityAssertionsResult = referential_integrity_assertions(mergedGlobalAssertionsParams, config, referentialIntegrityConditions);
-
-    return {
-        rowConditionAssertions: rowConditionAssertionsResult,
-        uniqueKeyAssertions: uniqueKeyAssertionsResult,
-        dataFreshnessAssertions: dataFreshnessAssertionsResult,
-        dataCompletenessAssertions: dataCompletenessAssertionsResult,
-        referentialIntegrityAssertions: referentialIntegrityAssertionsResult
-    };
-}
+  return {
+    rowConditionAssertions: rowConditionAssertionsResult,
+    uniqueKeyAssertions: uniqueKeyAssertionsResult,
+    dataFreshnessAssertions: dataFreshnessAssertionsResult,
+    dataCompletenessAssertions: dataCompletenessAssertionsResult,
+    referentialIntegrityAssertions: referentialIntegrityAssertionsResult,
+  };
+};
