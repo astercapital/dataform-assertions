@@ -89,7 +89,7 @@ module.exports = (globalParams, config, referentialIntegrityConditions) => {
 
       relationships.forEach(
         ({ parentKey, childSchema, childTable, childKey }) => {
-          const childFilter = config[childTable]?.where ?? true;
+          const childFilter = config[childSchema]?.[childTable]?.where ?? true;
           createReferentialIntegrityAssertion(
             globalParams,
             parentSchema,
