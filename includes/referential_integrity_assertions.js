@@ -23,14 +23,28 @@
 
 const assertions = [];
 
-const createReferentialIntegrityAssertion = (globalParams, parentSchema, parentTable, parentKey, parentFilter, childSchema, childTable, childKey, childFilter) => {
-
-  const assertion = assert(`assert_referential_integrity_${parentSchema}_${parentTable}_${childSchema}_${childTable}`)
+const createReferentialIntegrityAssertion = (
+  globalParams,
+  parentSchema,
+  parentTable,
+  parentKey,
+  parentFilter,
+  childSchema,
+  childTable,
+  childKey,
+  childFilter,
+) => {
+  const assertion = assert(
+    `${parentSchema}_${parentTable}_assertions_referential_integrity_${childSchema}_${childTable}`,
+  )
     .database(globalParams.database)
     .schema(globalParams.schema)
-    .description(`Check referential integrity for ${childTable}.${childKey} referencing ${parentTable}.${parentKey}`)
+    .description(
+      `Check referential integrity for ${childTable}.${childKey} referencing ${parentTable}.${parentKey}`,
+    )
     .tags("assert-referential-integrity")
-    .query(ctx => `
+    .query(
+      (ctx) => `
                 WITH
                     parent_filtering AS (
                         SELECT
@@ -54,11 +68,14 @@ const createReferentialIntegrityAssertion = (globalParams, parentSchema, parentT
                     FROM parent_filtering AS pt
                     LEFT JOIN child_filtering AS t ON t.${childKey} = pt.${parentKey}
                     WHERE t.${childKey} IS NULL
-        `);
+        `,
+    );
 
-  (globalParams.tags && globalParams.tags.forEach((tag) => assertion.tags(tag)));
+  globalParams.tags && globalParams.tags.forEach((tag) => assertion.tags(tag));
 
-  (globalParams.disabledInEnvs && globalParams.disabledInEnvs.includes(dataform.projectConfig.vars.env)) && assertion.disabled();
+  globalParams.disabledInEnvs &&
+    globalParams.disabledInEnvs.includes(dataform.projectConfig.vars.env) &&
+    assertion.disabled();
 
   assertions.push(assertion);
 };
@@ -70,26 +87,23 @@ module.exports = (globalParams, config, referentialIntegrityConditions) => {
       const relationships = parentTables[parentTable];
       const parentFilter = config[parentSchema]?.[parentTable]?.where ?? true;
 
-      relationships.forEach(({
-        parentKey,
-        childSchema,
-        childTable,
-        childKey
-      }) => {
-        const childFilter = config[childTable]?.where ?? true;
-        createReferentialIntegrityAssertion(
-          globalParams,
-          parentSchema,
-          parentTable,
-          parentKey,
-          parentFilter,
-          childSchema,
-          childTable,
-          childKey,
-          childFilter
-        );
-      })
+      relationships.forEach(
+        ({ parentKey, childSchema, childTable, childKey }) => {
+          const childFilter = config[childSchema]?.[childTable]?.where ?? true;
+          createReferentialIntegrityAssertion(
+            globalParams,
+            parentSchema,
+            parentTable,
+            parentKey,
+            parentFilter,
+            childSchema,
+            childTable,
+            childKey,
+            childFilter,
+          );
+        },
+      );
     }
-  };
+  }
   return assertions;
 };

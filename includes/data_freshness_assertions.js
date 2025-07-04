@@ -20,13 +20,25 @@
 
 const assertions = [];
 
-const createDataFreshnessAssertion = (globalParams, schemaName, tableName, filter, delayCondition, timeUnit, dateColumn, timeZone = "UTC") => {
-  const assertion = assert(`assert_freshness_${schemaName}_${tableName}`)
+const createDataFreshnessAssertion = (
+  globalParams,
+  schemaName,
+  tableName,
+  filter,
+  delayCondition,
+  timeUnit,
+  dateColumn,
+  timeZone = "UTC",
+) => {
+  const assertion = assert(`${schemaName}_${tableName}_assertions_freshness`)
     .database(globalParams.database)
     .schema(globalParams.schema)
-    .description(`Assert that data in ${schemaName}.${tableName} is fresh with a delay less than ${delayCondition} ${timeUnit}`)
+    .description(
+      `Assert that data in ${schemaName}.${tableName} is fresh with a delay less than ${delayCondition} ${timeUnit}`,
+    )
     .tags("assert-data-freshness")
-    .query(ctx => `
+    .query(
+      (ctx) => `
                 WITH
                     filtering AS (
                         SELECT
@@ -38,9 +50,17 @@ const createDataFreshnessAssertion = (globalParams, schemaName, tableName, filte
                     ),
                     freshness AS (
                         SELECT
-                          ${["DAY", "WEEK", "MONTH", "QUARTER", "YEAR"].includes(timeUnit)
+                          ${
+                            [
+                              "DAY",
+                              "WEEK",
+                              "MONTH",
+                              "QUARTER",
+                              "YEAR",
+                            ].includes(timeUnit)
                               ? `DATE_DIFF(CURRENT_DATE("${timeZone}"), MAX(${dateColumn}), ${timeUnit})`
-                              : `TIMESTAMP_DIFF(CURRENT_TIMESTAMP(), TIMESTAMP(MAX(${dateColumn}),"${timeZone}"), ${timeUnit})`} AS delay
+                              : `TIMESTAMP_DIFF(CURRENT_TIMESTAMP(), TIMESTAMP(MAX(${dateColumn}),"${timeZone}"), ${timeUnit})`
+                          } AS delay
                         FROM
                             filtering
                     )
@@ -50,11 +70,14 @@ const createDataFreshnessAssertion = (globalParams, schemaName, tableName, filte
                     freshness
                 WHERE
                     delay > ${delayCondition}
-            `);
+            `,
+    );
 
-  (globalParams.tags && globalParams.tags.forEach((tag) => assertion.tags(tag)));
+  globalParams.tags && globalParams.tags.forEach((tag) => assertion.tags(tag));
 
-  (globalParams.disabledInEnvs && globalParams.disabledInEnvs.includes(dataform.projectConfig.vars.env)) && assertion.disabled();
+  globalParams.disabledInEnvs &&
+    globalParams.disabledInEnvs.includes(dataform.projectConfig.vars.env) &&
+    assertion.disabled();
 
   assertions.push(assertion);
 };
@@ -64,14 +87,19 @@ module.exports = (globalParams, config, freshnessConditions) => {
   for (let schemaName in freshnessConditions) {
     const tableNames = freshnessConditions[schemaName];
     for (let tableName in tableNames) {
-      const {
+      const { delayCondition, timeUnit, dateColumn, timeZone } =
+        tableNames[tableName];
+      const filter = config[schemaName]?.[tableName]?.where ?? true;
+      createDataFreshnessAssertion(
+        globalParams,
+        schemaName,
+        tableName,
+        filter,
         delayCondition,
         timeUnit,
         dateColumn,
-        timeZone
-      } = tableNames[tableName];
-      const filter = config[schemaName]?.[tableName]?.where ?? true;
-      createDataFreshnessAssertion(globalParams, schemaName, tableName, filter, delayCondition, timeUnit, dateColumn, timeZone);
+        timeZone,
+      );
     }
   }
 
